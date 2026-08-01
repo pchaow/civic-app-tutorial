@@ -1,19 +1,25 @@
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  onSnapshot, 
+  query, 
+  orderBy 
+} from 'firebase/firestore';
+import { db } from './firebase';
 import type { ComplaintDocument, ComplaintStatus, Department, ResolutionData, UrgencyLevel, CitizenFeedback } from '../types';
-import { INITIAL_COMPLAINTS } from './mockData';
 
 const LOCAL_STORAGE_KEY = 'civicsolve_complaints_v1';
 
 class ComplaintService {
   private getStoredComplaints(): ComplaintDocument[] {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_COMPLAINTS));
-      return INITIAL_COMPLAINTS;
-    }
+    if (!raw) return [];
     try {
       return JSON.parse(raw);
     } catch {
-      return INITIAL_COMPLAINTS;
+      return [];
     }
   }
 
@@ -29,7 +35,32 @@ class ComplaintService {
     return this.getStoredComplaints().find(c => c.complaintId === id || c.trackingNumber === id);
   }
 
-  public createComplaint(data: {
+  // Real-time Firestore Subscription listener
+  public subscribeComplaints(callback: (complaints: ComplaintDocument[]) => void) {
+    try {
+      const q = query(collection(db, 'complaints'), orderBy('createdAt', 'desc'));
+      return onSnapshot(q, (snapshot) => {
+        const firestoreComplaints: ComplaintDocument[] = [];
+        snapshot.forEach((docSnap) => {
+          firestoreComplaints.push(docSnap.data() as ComplaintDocument);
+        });
+        if (firestoreComplaints.length > 0) {
+          this.saveComplaints(firestoreComplaints);
+          callback(firestoreComplaints);
+        } else {
+          callback(this.getStoredComplaints());
+        }
+      }, (err) => {
+        console.warn('Firestore subscription fallback to local storage:', err);
+        callback(this.getStoredComplaints());
+      });
+    } catch {
+      callback(this.getStoredComplaints());
+      return () => {};
+    }
+  }
+
+  public async createComplaint(data: {
     title: string;
     description: string;
     category: Department;
@@ -39,7 +70,7 @@ class ComplaintService {
     citizenId: string;
     citizenName: string;
     attachmentsUrl?: string[];
-  }): ComplaintDocument {
+  }): Promise<ComplaintDocument> {
     const complaints = this.getStoredComplaints();
     const count = complaints.length + 1;
     const trackingNum = `MUN-2026-${String(8890 + count).padStart(4, '0')}`;
@@ -50,7 +81,7 @@ class ComplaintService {
       complaintId: newId,
       trackingNumber: trackingNum,
       citizenId: data.citizenId,
-      citizenName: data.isAnonymous ? 'Anonymous Resident' : data.citizenName,
+      citizenName: data.isAnonymous ? 'ประชาชนไม่ประสงค์ออกนาม' : data.citizenName,
       category: data.category,
       title: data.title,
       description: data.description,
@@ -74,28 +105,38 @@ class ComplaintService {
           type: 'submitted',
           performedBy: {
             uid: data.citizenId,
-            name: data.isAnonymous ? 'Anonymous Resident' : data.citizenName,
+            name: data.isAnonymous ? 'ประชาชนไม่ประสงค์ออกนาม' : data.citizenName,
             role: 'citizen'
           },
           newStatus: 'submitted',
-          message: `Complaint #${trackingNum} successfully registered into municipal portal.`,
+          message: `เรื่องร้องเรียน #${trackingNum} ถูกบันทึกเข้าสู่ระบบเรียบร้อยแล้ว`,
           timestamp: now
         }
       ]
     };
 
+    // Save to local state
     complaints.unshift(newComplaint);
     this.saveComplaints(complaints);
+
+    // Sync to Cloud Firestore
+    try {
+      const docRef = doc(db, 'complaints', newId);
+      await setDoc(docRef, newComplaint, { merge: true });
+    } catch (err) {
+      console.warn('Cloud Firestore save notice:', err);
+    }
+
     return newComplaint;
   }
 
-  public updateComplaintStatus(
+  public async updateComplaintStatus(
     complaintId: string,
     newStatus: ComplaintStatus,
     performedBy: { uid: string; name: string; role: 'officer' | 'admin' },
     message: string,
     resolution?: ResolutionData
-  ): ComplaintDocument {
+  ): Promise<ComplaintDocument> {
     const complaints = this.getStoredComplaints();
     const idx = complaints.findIndex(c => c.complaintId === complaintId);
     if (idx === -1) throw new Error('Complaint not found');
@@ -129,16 +170,25 @@ class ComplaintService {
       },
       previousStatus: prevStatus,
       newStatus,
-      message: message || `Status updated from ${prevStatus} to ${newStatus}`,
+      message: message || `อัปเดตสถานะเป็น ${newStatus}`,
       timestamp: now
     });
 
     complaints[idx] = complaint;
     this.saveComplaints(complaints);
+
+    // Sync Update to Cloud Firestore
+    try {
+      const docRef = doc(db, 'complaints', complaintId);
+      await setDoc(docRef, complaint, { merge: true });
+    } catch (err) {
+      console.warn('Cloud Firestore status update notice:', err);
+    }
+
     return complaint;
   }
 
-  public addFeedback(complaintId: string, feedback: CitizenFeedback): ComplaintDocument {
+  public async addFeedback(complaintId: string, feedback: CitizenFeedback): Promise<ComplaintDocument> {
     const complaints = this.getStoredComplaints();
     const idx = complaints.findIndex(c => c.complaintId === complaintId);
     if (idx === -1) throw new Error('Complaint not found');
@@ -146,6 +196,18 @@ class ComplaintService {
     complaints[idx].feedback = feedback;
     complaints[idx].updatedAt = new Date().toISOString();
     this.saveComplaints(complaints);
+
+    // Sync Feedback to Cloud Firestore
+    try {
+      const docRef = doc(db, 'complaints', complaintId);
+      await updateDoc(docRef, {
+        feedback: feedback,
+        updatedAt: complaints[idx].updatedAt
+      });
+    } catch (err) {
+      console.warn('Cloud Firestore feedback notice:', err);
+    }
+
     return complaints[idx];
   }
 }

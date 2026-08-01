@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { complaintService } from '../../services/complaintService';
 import { uploadFileToFirebase } from '../../services/storageService';
 import { DEPARTMENT_TH, STATUS_TH, URGENCY_TH } from '../../types';
@@ -11,6 +11,13 @@ import { UserManagement } from '../admin/UserManagement';
 export const OfficerDashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const [complaints, setComplaints] = useState<ComplaintDocument[]>(() => complaintService.getAllComplaints());
+
+  useEffect(() => {
+    const unsubscribe = complaintService.subscribeComplaints((liveComplaints) => {
+      setComplaints(liveComplaints);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const [activeTab, setActiveTab] = useState<'queue' | 'users'>('queue');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState<string>('all');
@@ -57,11 +64,11 @@ export const OfficerDashboard: React.FC = () => {
     }
   };
 
-  const handleSaveResolution = (e: React.FormEvent) => {
+  const handleSaveResolution = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeModalComplaint) return;
 
-    const updated = complaintService.updateComplaintStatus(
+    const updated = await complaintService.updateComplaintStatus(
       activeModalComplaint.complaintId,
       newStatus,
       {

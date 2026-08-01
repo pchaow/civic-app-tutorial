@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { complaintService } from '../../services/complaintService';
 import { STATUS_TH, URGENCY_TH } from '../../types';
-import type { ComplaintStatus } from '../../types';
+import type { ComplaintDocument, ComplaintStatus } from '../../types';
 import { CheckCircle, Clock, Search, Star } from 'lucide-react';
 import { showLocalBrowserNotification } from '../../services/fcmService';
 
@@ -10,7 +10,15 @@ interface StepperTrackerProps {
 }
 
 export const StepperTracker: React.FC<StepperTrackerProps> = ({ initialComplaintId }) => {
-  const complaints = complaintService.getAllComplaints();
+  const [complaints, setComplaints] = useState<ComplaintDocument[]>(() => complaintService.getAllComplaints());
+
+  useEffect(() => {
+    const unsubscribe = complaintService.subscribeComplaints((liveComplaints) => {
+      setComplaints(liveComplaints);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const [selectedId, setSelectedId] = useState<string>(
     initialComplaintId || complaints[0]?.complaintId || ''
   );

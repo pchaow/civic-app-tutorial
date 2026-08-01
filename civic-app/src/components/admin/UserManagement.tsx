@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import type { UserProfile, UserRole, Department } from '../../types';
 import { MOCK_USERS } from '../../services/mockData';
 import { Users, Save, Check } from 'lucide-react';
@@ -15,13 +17,33 @@ export const UserManagement: React.FC = () => {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch {}
     }
-    // Always include current logged-in user if not present
     if (currentUser) return [currentUser];
     return MOCK_USERS;
   };
 
   const [users, setUsers] = useState<UserProfile[]>(getStoredUsers);
   const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
+
+  // Fetch users live from Cloud Firestore
+  useEffect(() => {
+    const fetchCloudUsers = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const cloudUsers: UserProfile[] = [];
+        querySnapshot.forEach((docSnap) => {
+          cloudUsers.push(docSnap.data() as UserProfile);
+        });
+        if (cloudUsers.length > 0) {
+          setUsers(cloudUsers);
+          localStorage.setItem('civicsolve_registered_users', JSON.stringify(cloudUsers));
+        }
+      } catch (e) {
+        console.warn('Firestore fetch users notice:', e);
+      }
+    };
+
+    fetchCloudUsers();
+  }, []);
 
   const handleRoleChange = (uid: string, newRole: UserRole) => {
     setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role: newRole } : u));
@@ -31,10 +53,19 @@ export const UserManagement: React.FC = () => {
     setUsers(prev => prev.map(u => u.uid === uid ? { ...u, department: newDept } : u));
   };
 
-  const handleSaveUserPermissions = (userToSave: UserProfile) => {
+  const handleSaveUserPermissions = async (userToSave: UserProfile) => {
     const updatedUsers = users.map(u => u.uid === userToSave.uid ? userToSave : u);
     setUsers(updatedUsers);
     localStorage.setItem('civicsolve_registered_users', JSON.stringify(updatedUsers));
+
+    // Save User Role Update directly to Cloud Firestore
+    try {
+      const userRef = doc(db, 'users', userToSave.uid);
+      await setDoc(userRef, userToSave, { merge: true });
+    } catch (e) {
+      console.warn('Firestore user update notice:', e);
+    }
+
     setSavedSuccessId(userToSave.uid);
     setTimeout(() => setSavedSuccessId(null), 2000);
   };

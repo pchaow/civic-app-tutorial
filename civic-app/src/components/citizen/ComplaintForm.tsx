@@ -100,14 +100,14 @@ export const FileComplaintForm: React.FC<FileComplaintFormProps> = ({ onSuccess 
     setUploadedPhotoUrls(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) {
       alert('กรุณากรอกหัวข้อและรายละเอียดเรื่องร้องเรียนให้ครบถ้วน');
       return;
     }
 
-    const created = complaintService.createComplaint({
+    const created = await complaintService.createComplaint({
       title,
       description,
       category,
