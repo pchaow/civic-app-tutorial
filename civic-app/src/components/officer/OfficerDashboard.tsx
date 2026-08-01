@@ -237,13 +237,67 @@ export const OfficerDashboard: React.FC = () => {
 
           {activeModalComplaint && (
             <div className="modal-overlay">
-              <div className="modal-card">
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                  จัดการเรื่องร้องเรียน #{activeModalComplaint.trackingNumber}
-                </h2>
-                <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-                  หัวข้อ: {activeModalComplaint.title} ({DEPARTMENT_TH[activeModalComplaint.category] || activeModalComplaint.category})
-                </p>
+              <div className="modal-card" style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.75rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 700 }}>
+                      #{activeModalComplaint.trackingNumber}
+                    </span>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+                      {activeModalComplaint.title}
+                    </h2>
+                  </div>
+                  <span className={`badge badge-${activeModalComplaint.status}`}>
+                    {STATUS_TH[activeModalComplaint.status] || activeModalComplaint.status}
+                  </span>
+                </div>
+
+                {/* Complaint Full Details Card for Officer */}
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <div>
+                      <span style={{ color: '#64748b' }}>ผู้แจ้งเรื่อง:</span> <strong>{activeModalComplaint.citizenName}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b' }}>สำนักหน่วยงาน:</span> <strong>{DEPARTMENT_TH[activeModalComplaint.category] || activeModalComplaint.category}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b' }}>ความเร่งด่วน:</span> <span className={`urgency-${activeModalComplaint.urgency}`}>{URGENCY_TH[activeModalComplaint.urgency] || activeModalComplaint.urgency}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b' }}>วันที่แจ้ง:</span> <strong>{new Date(activeModalComplaint.createdAt).toLocaleString('th-TH')}</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#64748b', display: 'block', fontWeight: 600 }}>รายละเอียดปัญหา:</span>
+                    <p style={{ background: '#ffffff', padding: '0.6rem 0.75rem', borderRadius: '6px', border: '1px solid #e2e8f0', marginTop: '0.25rem', whiteSpace: 'pre-wrap' }}>
+                      {activeModalComplaint.description}
+                    </p>
+                  </div>
+
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <span style={{ color: '#64748b', display: 'block', fontWeight: 600 }}>สถานที่เกิดเหตุ & พิกัด GPS:</span>
+                    <span style={{ color: '#334155' }}>📍 {activeModalComplaint.location.address} (GPS: {activeModalComplaint.location.latitude}, {activeModalComplaint.location.longitude})</span>
+                  </div>
+
+                  {activeModalComplaint.attachments.length > 0 && (
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontWeight: 600, marginBottom: '0.35rem' }}>รูปภาพประกอบปัญหาจากประชาชน ({activeModalComplaint.attachments.length} รูป):</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {activeModalComplaint.attachments.map((att, i) => (
+                          <a key={i} href={att.url} target="_blank" rel="noreferrer">
+                            <img
+                              src={att.url}
+                              alt={`รูปแนบ ${i + 1}`}
+                              style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <form onSubmit={handleSaveResolution}>
                   <div className="form-group">
