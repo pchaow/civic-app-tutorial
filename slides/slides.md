@@ -66,8 +66,8 @@ graph TD
    * Strategy 2 Firestore lookup allowing Super Admin (`pchaowmobile@gmail.com`) to view all registered users and assign officer roles & department scopes (`โครงสร้างพื้นฐาน`, `สาธารณสุขและขยะ`, `การประปา`, `ไฟฟ้าและแสงสว่าง`, `จราจร`).
 3. **100% Real-Time Cloud Firestore Synchronization**:
    * Instant cross-device updates using Firestore `onSnapshot` real-time listeners.
-4. **Proof-of-Completion Gallery**:
-   * Officers attach completed work photos before marking tickets as `Resolved`.
+4. **Expanded Complaint Details & Proof Gallery**:
+   * Officers can inspect full complaint descriptions, exact GPS addresses/coordinates, and full-screen citizen photo attachments before attaching proof-of-completion photos to mark tickets as `Resolved`.
 
 ---
 
