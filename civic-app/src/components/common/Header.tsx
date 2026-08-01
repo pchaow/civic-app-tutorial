@@ -90,16 +90,21 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           </button>
 
           {/* User Account Bar */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.85rem' }}>
-            <span style={{ fontWeight: 600, color: '#334155' }}>{currentUser?.fullName}</span>
-            <span style={{ fontSize: '0.7rem', background: '#e2e8f0', padding: '1px 6px', borderRadius: '8px' }}>
-              {currentUser?.role === 'officer' ? 'เจ้าหน้าที่' : currentUser?.role === 'admin' ? 'ผู้ดูแล' : 'ประชาชน'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f1f5f9', padding: '0.35rem 0.85rem', borderRadius: '20px', fontSize: '0.85rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+              <span style={{ fontWeight: 600, color: '#334155' }}>{currentUser?.fullName || 'ผู้ใช้งาน'}</span>
+              {currentUser?.email && (
+                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{currentUser.email}</span>
+              )}
+            </div>
+            <span style={{ fontSize: '0.7rem', background: '#e2e8f0', padding: '2px 8px', borderRadius: '10px', marginLeft: '0.25rem' }}>
+              {currentUser?.role === 'officer' ? 'เจ้าหน้าที่' : currentUser?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'ประชาชน'}
             </span>
             {isOfficerOrAdmin && (
               <button
                 onClick={() => logout()}
                 title="ออกจากระบบ"
-                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', marginLeft: '0.25rem' }}
+                style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', marginLeft: '0.35rem', padding: 0, display: 'flex', alignItems: 'center' }}
               >
                 <LogOut size={14} />
               </button>
