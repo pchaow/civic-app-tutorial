@@ -1,15 +1,16 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from './firebase';
-
 /**
  * Resizes and compresses an image File using HTML5 Canvas.
- * Converts heavy camera photos (5-10MB) into lightweight WebP/JPEG images (~50-150KB).
+ * Converts heavy camera photos (5-10MB) into lightweight WebP images (~50-100KB).
  */
-export const compressImage = (file: File, maxWidth: number = 1024, quality: number = 0.75): Promise<File> => {
-  return new Promise((resolve) => {
-    // If file is not an image, return original
+export const compressImage = (file: File, maxWidth: number = 800, quality: number = 0.70): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    // If file is not an image, resolve empty
     if (!file.type.startsWith('image/')) {
-      return resolve(file);
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+      return;
     }
 
     const image = new Image();
@@ -24,7 +25,7 @@ export const compressImage = (file: File, maxWidth: number = 1024, quality: numb
       let width = image.width;
       let height = image.height;
 
-      // Calculate aspect ratio scaling
+      // Calculate aspect ratio scaling (max 800px width for compact storage)
       if (width > maxWidth) {
         height = Math.round((height * maxWidth) / width);
         width = maxWidth;
@@ -38,51 +39,22 @@ export const compressImage = (file: File, maxWidth: number = 1024, quality: numb
         ctx.drawImage(image, 0, 0, width, height);
       }
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) {
-            return resolve(file);
-          }
-          const compressedFile = new File([blob], `${file.name.replace(/\.[^/.]+$/, '')}.webp`, {
-            type: 'image/webp',
-            lastModified: Date.now()
-          });
-          resolve(compressedFile);
-        },
-        'image/webp',
-        quality
-      );
+      // Convert Canvas to compact WebP Base64 Data URL
+      const dataUrl = canvas.toDataURL('image/webp', quality);
+      resolve(dataUrl);
     };
 
-    image.onerror = () => resolve(file);
+    image.onerror = (err) => reject(err);
     reader.readAsDataURL(file);
   });
 };
 
 /**
- * Uploads a local File object to Cloud Storage for Firebase with automatic compression.
+ * Uploads a local File object by converting it into a lightweight WebP Base64 Data URL.
+ * Saved directly inside Firestore documents (100% free, 0 CORS configuration required).
  */
-export const uploadFileToFirebase = async (file: File, folder: string = 'complaints'): Promise<string> => {
-  // Compress image before uploading to save up to 90% cloud storage space
-  const compressedFile = await compressImage(file, 1024, 0.75);
-
-  try {
-    if (storage.app.options.storageBucket && !storage.app.options.storageBucket.includes('civicsolve-demo')) {
-      const fileName = `${Date.now()}_${compressedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const storageRef = ref(storage, `${folder}/${fileName}`);
-      const snapshot = await uploadBytes(storageRef, compressedFile);
-      const downloadUrl = await getDownloadURL(snapshot.ref);
-      return downloadUrl;
-    }
-  } catch (err) {
-    console.warn('Firebase Storage live upload fallback triggered:', err);
-  }
-
-  // Fallback: Convert File to base64 Data URL for offline preview & testing
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = (error) => reject(error);
-    reader.readAsDataURL(compressedFile);
-  });
+export const uploadFileToFirebase = async (file: File, _folder: string = 'complaints'): Promise<string> => {
+  // Compress image to lightweight WebP Base64 Data URL (~50-100KB)
+  const base64Url = await compressImage(file, 800, 0.70);
+  return base64Url;
 };
