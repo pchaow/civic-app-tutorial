@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/common/Header';
 import { FileComplaintForm } from './components/citizen/ComplaintForm';
@@ -9,6 +9,16 @@ import { ShieldCheck } from 'lucide-react';
 export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'file' | 'track' | 'officer'>('file');
   const [trackedId, setTrackedId] = useState<string | null>(null);
+
+  // Clear stale local storage caches for clean setup
+  useEffect(() => {
+    const versionKey = 'civicsolve_fresh_setup_v2';
+    if (!localStorage.getItem(versionKey)) {
+      localStorage.removeItem('civicsolve_complaints_v1');
+      localStorage.removeItem('civicsolve_registered_users');
+      localStorage.setItem(versionKey, 'true');
+    }
+  }, []);
 
   const handleComplaintSuccess = (id: string) => {
     setTrackedId(id);
