@@ -56,7 +56,7 @@ export const signInWithGoogle = async (): Promise<UserProfile> => {
       }
     }
 
-    return {
+    const userProfile: UserProfile = {
       uid: user.uid,
       fullName: user.displayName || 'ผู้ใช้งาน Google',
       email: email,
@@ -67,11 +67,24 @@ export const signInWithGoogle = async (): Promise<UserProfile> => {
       updatedAt: new Date().toISOString()
     };
 
+    // Save/Update user in local registered users list
+    const storedUsersRaw = localStorage.getItem('civicsolve_registered_users');
+    let registeredUsers: UserProfile[] = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+    const existingIdx = registeredUsers.findIndex(u => u.uid === user.uid || u.email === email);
+    if (existingIdx >= 0) {
+      registeredUsers[existingIdx] = { ...registeredUsers[existingIdx], ...userProfile };
+    } else {
+      registeredUsers.push(userProfile);
+    }
+    localStorage.setItem('civicsolve_registered_users', JSON.stringify(registeredUsers));
+
+    return userProfile;
+
   } catch (error) {
     console.warn('Google Auth popup fallback triggered:', error);
     
     // Demo Fallback Profile for Super Admin
-    return {
+    const adminProfile: UserProfile = {
       uid: `super_admin_chaow`,
       fullName: 'Super Admin (pchaowmobile@gmail.com)',
       email: 'pchaowmobile@gmail.com',
@@ -81,6 +94,15 @@ export const signInWithGoogle = async (): Promise<UserProfile> => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
+
+    const storedUsersRaw = localStorage.getItem('civicsolve_registered_users');
+    let registeredUsers: UserProfile[] = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+    if (!registeredUsers.some(u => u.email === adminProfile.email)) {
+      registeredUsers.push(adminProfile);
+      localStorage.setItem('civicsolve_registered_users', JSON.stringify(registeredUsers));
+    }
+
+    return adminProfile;
   }
 };
 

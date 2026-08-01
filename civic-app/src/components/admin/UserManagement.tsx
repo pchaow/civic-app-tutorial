@@ -6,7 +6,21 @@ import { useAuth } from '../../context/AuthContext';
 
 export const UserManagement: React.FC = () => {
   const { currentUser } = useAuth();
-  const [users, setUsers] = useState<UserProfile[]>(MOCK_USERS);
+
+  const getStoredUsers = (): UserProfile[] => {
+    const raw = localStorage.getItem('civicsolve_registered_users');
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+    // Always include current logged-in user if not present
+    if (currentUser) return [currentUser];
+    return MOCK_USERS;
+  };
+
+  const [users, setUsers] = useState<UserProfile[]>(getStoredUsers);
   const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
 
   const handleRoleChange = (uid: string, newRole: UserRole) => {
@@ -17,8 +31,11 @@ export const UserManagement: React.FC = () => {
     setUsers(prev => prev.map(u => u.uid === uid ? { ...u, department: newDept } : u));
   };
 
-  const handleSaveUserPermissions = (user: UserProfile) => {
-    setSavedSuccessId(user.uid);
+  const handleSaveUserPermissions = (userToSave: UserProfile) => {
+    const updatedUsers = users.map(u => u.uid === userToSave.uid ? userToSave : u);
+    setUsers(updatedUsers);
+    localStorage.setItem('civicsolve_registered_users', JSON.stringify(updatedUsers));
+    setSavedSuccessId(userToSave.uid);
     setTimeout(() => setSavedSuccessId(null), 2000);
   };
 
