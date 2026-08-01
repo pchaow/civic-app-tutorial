@@ -82,11 +82,14 @@ flowchart LR
 * OpenStreetMap reverse geocoding via Nominatim API.
 * Interactive Leaflet map pin picker (`LocationPickerMap.tsx`).
 
-### **2. Direct Image Upload Service**:
-* `uploadFileToFirebase()` in `storageService.ts` uploads binary image files to Cloud Storage for Firebase.
-* Built-in `FileReader.readAsDataURL()` fallback for instant offline previews.
+### **2. Direct Image Upload & Canvas Compression**:
+* `uploadFileToFirebase()` in `storageService.ts` automatically resizes heavy camera photos (5-10MB) to 1024px WebP images (~50-150KB) using HTML5 Canvas.
+* Saves 90% cloud storage bandwidth and costs.
 
-### **3. Google Auth & Role Assignment (Strategy 2)**:
+### **3. Automated Release Version Guardrails**:
+* `versionGuardrail.ts` (`APP_VERSION = 'v1.1.0'`) checks and purges outdated client LocalStorage caches upon new app releases.
+
+### **4. Google Auth & Role Assignment (Strategy 2)**:
 * `pchaowmobile@gmail.com` configured as Super Admin.
 * Firestore `/users/{uid}` lookup determines `officer` or `admin` permissions dynamically.
 

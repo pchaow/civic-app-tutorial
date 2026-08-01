@@ -40,7 +40,7 @@ graph TD
     CitizenUI -->|Read/Write Realtime Complaints| Firestore
     OfficerUI -->|Read/Manage/Filter Complaints| Firestore
 
-    CitizenUI -->|Upload Photos| FBStorage
+    CitizenUI -->|Upload Compressed WebP Photos| FBStorage
     OfficerUI -->|Upload Resolution Photos| FBStorage
 
     CitizenUI <-->|Geocoding & Maps| MapsAPI

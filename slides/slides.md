@@ -49,8 +49,9 @@ graph TD
 1. **GPS Geolocation & Map Pinning**:
    * One-tap browser GPS coordinate detection (`navigator.geolocation`).
    * Reverse geocoding to human-readable Thai addresses via OpenStreetMap.
-2. **Direct Image Uploads**:
+2. **Direct Image Uploads & Automatic Compression**:
    * Drag-and-drop file upload zone supporting PNG, JPG, and WEBP.
+   * Client-side Canvas image resizing (1024px) & WebP conversion to save 90% cloud storage costs.
    * Multi-file preview and storage in Cloud Storage for Firebase.
 3. **5-Star Resolution Feedback**:
    * Citizens can view officer proof-of-work photos and submit rating feedback upon ticket closure.
