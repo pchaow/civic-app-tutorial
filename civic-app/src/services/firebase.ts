@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getMessaging, isSupported } from 'firebase/messaging';
 
-// Default Firebase Configuration (using Vite Environment variables or fallback demo config)
+// Live Firebase Configuration for project: testagy-001
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDemoKeyCivicSolve2026AppConfig",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "civicsolve-demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "civicsolve-demo",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "civicsolve-demo.appspot.com",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "testagy-001.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "testagy-001",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "testagy-001.appspot.com",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "102938475610",
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:102938475610:web:a1b2c3d4e5f6g7h8"
 };
