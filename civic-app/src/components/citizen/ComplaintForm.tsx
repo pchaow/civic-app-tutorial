@@ -100,6 +100,8 @@ export const FileComplaintForm: React.FC<FileComplaintFormProps> = ({ onSuccess 
     setUploadedPhotoUrls(prev => prev.filter((_, i) => i !== index));
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !description) {
@@ -107,30 +109,39 @@ export const FileComplaintForm: React.FC<FileComplaintFormProps> = ({ onSuccess 
       return;
     }
 
-    const created = await complaintService.createComplaint({
-      title,
-      description,
-      category,
-      urgency,
-      isAnonymous,
-      location: { address, latitude, longitude },
-      citizenId: currentUser?.uid || 'usr_citizen_demo',
-      citizenName: currentUser?.fullName || 'สมชาย ใจดี',
-      attachmentsUrl: uploadedPhotoUrls
-    });
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    showLocalBrowserNotification(`ส่งเรื่องร้องเรียนสำเร็จ #${created.trackingNumber}`, {
-      body: `เรื่องร้องเรียน "${title}" ถูกส่งไปยังหน่วยงานรับผิดชอบเรียบร้อยแล้ว`,
-      icon: uploadedPhotoUrls[0]
-    });
-
-    setTimeout(() => {
-      showLocalBrowserNotification(`[แจ้งเตือนเจ้าหน้าที่] มีเรื่องร้องเรียนใหม่ ${created.trackingNumber}`, {
-        body: `ความเร่งด่วน: ${urgency.toUpperCase()} - ${title} สถานที่: ${address}`,
+    try {
+      const created = await complaintService.createComplaint({
+        title,
+        description,
+        category,
+        urgency,
+        isAnonymous,
+        location: { address, latitude, longitude },
+        citizenId: currentUser?.uid || 'usr_citizen_demo',
+        citizenName: currentUser?.fullName || 'สมชาย ใจดี',
+        attachmentsUrl: uploadedPhotoUrls
       });
-    }, 1500);
 
-    setSubmittedId(created.complaintId);
+      showLocalBrowserNotification(`ส่งเรื่องร้องเรียนสำเร็จ #${created.trackingNumber}`, {
+        body: `เรื่องร้องเรียน "${title}" ถูกส่งไปยังหน่วยงานรับผิดชอบเรียบร้อยแล้ว`,
+        icon: uploadedPhotoUrls[0]
+      });
+
+      setTimeout(() => {
+        showLocalBrowserNotification(`[แจ้งเตือนเจ้าหน้าที่] มีเรื่องร้องเรียนใหม่ ${created.trackingNumber}`, {
+          body: `ความเร่งด่วน: ${urgency.toUpperCase()} - ${title} สถานที่: ${address}`,
+        });
+      }, 1500);
+
+      setSubmittedId(created.complaintId);
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการบันทึกเรื่องร้องเรียน: ' + err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submittedId) {
@@ -349,8 +360,14 @@ export const FileComplaintForm: React.FC<FileComplaintFormProps> = ({ onSuccess 
           )}
         </div>
 
-        <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={isUploading}>
-          <Send size={18} /> ยืนยันส่งเรื่องร้องเรียน & ส่งการแจ้งเตือน
+        <button
+          type="submit"
+          className="btn btn-primary"
+          style={{ width: '100%', justifyContent: 'center' }}
+          disabled={isUploading || isSubmitting}
+        >
+          {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+          {isSubmitting ? 'กำลังบันทึกเรื่องร้องเรียนไปยังคลาวด์...' : 'ยืนยันส่งเรื่องร้องเรียน & ส่งการแจ้งเตือน'}
         </button>
       </form>
     </div>
