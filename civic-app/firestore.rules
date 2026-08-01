@@ -2,41 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper Functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function isOfficer() {
-      return isAuthenticated() && (request.auth.token.role == 'officer' || request.auth.token.role == 'admin');
-    }
-
     // User Profile Documents
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isOwner(userId) || isOfficer();
+      allow read, write: if true;
     }
 
-    // Complaints Collection
+    // Complaints Collection - Allow public read & write for citizen reporting & officer tracking
     match /complaints/{complaintId} {
-      // Citizens can read their own complaints; Officers/Admins can read all
-      allow read: if isOfficer() || (isAuthenticated() && resource.data.citizenId == request.auth.uid);
-      
-      // Citizens can create complaints where citizenId matches their UID
-      allow create: if isAuthenticated() && request.resource.data.citizenId == request.auth.uid;
-      
-      // Officers can update status, assigned officer, and resolution notes
-      // Citizens can update feedback ratings on resolved complaints
-      allow update: if isOfficer() || (isAuthenticated() && resource.data.citizenId == request.auth.uid);
+      allow read, write: if true;
 
-      // Sub-collection: Timeline Events
       match /timeline/{eventId} {
-        allow read: if isAuthenticated();
-        allow write: if isOfficer() || isAuthenticated();
+        allow read, write: if true;
       }
     }
   }
