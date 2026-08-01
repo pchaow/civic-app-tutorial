@@ -6,18 +6,15 @@ import { StepperTracker } from './components/citizen/StepperTracker';
 import { OfficerDashboard } from './components/officer/OfficerDashboard';
 import { ShieldCheck } from 'lucide-react';
 
+import { enforceVersionCacheGuardrail, APP_VERSION } from './services/versionGuardrail';
+
 export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'file' | 'track' | 'officer'>('file');
   const [trackedId, setTrackedId] = useState<string | null>(null);
 
-  // Clear stale local storage caches for clean setup
+  // Automated Version Cache Guardrail
   useEffect(() => {
-    const versionKey = 'civicsolve_fresh_setup_v2';
-    if (!localStorage.getItem(versionKey)) {
-      localStorage.removeItem('civicsolve_complaints_v1');
-      localStorage.removeItem('civicsolve_registered_users');
-      localStorage.setItem(versionKey, 'true');
-    }
+    enforceVersionCacheGuardrail();
   }, []);
 
   const handleComplaintSuccess = (id: string) => {
@@ -65,7 +62,7 @@ export const AppContent: React.FC = () => {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', fontSize: '0.85rem', borderTop: '1px solid #e2e8f0' }}>
-        © 2026 ระบบการจัดการเรื่องร้องเรียนเทศบาล CivicSolve พัฒนาด้วย Vite, React, TypeScript และ Firebase Cloud Services
+        © 2026 ระบบการจัดการเรื่องร้องเรียนเทศบาล CivicSolve ({APP_VERSION}) พัฒนาด้วย Vite, React, TypeScript และ Firebase Cloud Services
       </footer>
     </div>
   );
