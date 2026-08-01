@@ -108,8 +108,12 @@ gantt
 
 ---
 
-## 7. Next Steps & Action Items
+## 7. Implementation Status & Accomplishments
 
-- [ ] Review and approve functional requirements with municipality department heads.
-- [ ] Finalize role permissions and department workflow hierarchy.
-- [ ] Begin UI prototyping for citizen submission flow and officer dashboard.
+- [x] Review and approve functional requirements with municipality department heads.
+- [x] Finalize role permissions (Google OAuth Strategy 2) and department workflow hierarchy.
+- [x] Citizen submission flow with HTML5 GPS Geolocation & Leaflet map picker.
+- [x] Direct image upload service with Cloud Storage for Firebase integration.
+- [x] Real-time Cloud Firestore synchronization across devices.
+- [x] Super Admin User Management UI for role/department assignment (`pchaowmobile@gmail.com`).
+- [x] Live production deployment on Firebase Hosting: [https://testagy-001.web.app](https://testagy-001.web.app).

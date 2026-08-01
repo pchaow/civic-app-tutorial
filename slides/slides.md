@@ -60,18 +60,21 @@ graph TD
 ## 🛡️ Slide 5: Officer & Super Admin Features
 
 1. **Google OAuth Authentication**:
-   * Protected access gate preventing unauthorized entry to municipal queue.
-2. **Super Admin Role Management**:
-   * Strategy 2 Firestore lookup allowing Super Admin (`pchaowmobile@gmail.com`) to assign officer roles and department scopes (`โครงสร้างพื้นฐาน`, `สาธารณสุขและขยะ`, `การประปา`, `ไฟฟ้าและแสงสว่าง`, `จราจร`).
-3. **Proof-of-Completion Gallery**:
-   * Officers must attach completed work photos before marking tickets as `Resolved`.
+   * Protected access gate displaying user name and authenticated email address.
+2. **Super Admin Role & User Management (`UserManagement.tsx`)**:
+   * Strategy 2 Firestore lookup allowing Super Admin (`pchaowmobile@gmail.com`) to view all registered users and assign officer roles & department scopes (`โครงสร้างพื้นฐาน`, `สาธารณสุขและขยะ`, `การประปา`, `ไฟฟ้าและแสงสว่าง`, `จราจร`).
+3. **100% Real-Time Cloud Firestore Synchronization**:
+   * Instant cross-device updates using Firestore `onSnapshot` real-time listeners.
+4. **Proof-of-Completion Gallery**:
+   * Officers attach completed work photos before marking tickets as `Resolved`.
 
 ---
 
-## 🚀 Slide 6: Live Deployment & Roadmap
+## 🚀 Slide 6: Live Deployment & Repository
 
 * **Status**: Fully deployed & live on **Firebase Hosting**.
-* **Production Link**: [https://testagy-001.web.app](https://testagy-001.web.app)
+* **Production URL**: 👉 [https://testagy-001.web.app](https://testagy-001.web.app) 👈
+* **GitHub Repository**: 👉 [https://github.com/pchaow/civic-app-tutorial](https://github.com/pchaow/civic-app-tutorial) 👈
 * **Future Roadmap**:
   * Executive Analytics Dashboard (PDF/Excel exports).
   * Progressive Web App (PWA) offline installation manifest.
